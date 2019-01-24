@@ -1,0 +1,6 @@
+{
+    "vantiqUrl": "http://dev.vantiq.com",
+    "token": "<your token for this source>",
+    "sourceName": "<source name created in vantiq>",
+    "homeDir": "the working directory to save captured image."
+}

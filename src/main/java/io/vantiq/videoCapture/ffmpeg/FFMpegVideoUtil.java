@@ -31,7 +31,7 @@ public class FFMpegVideoUtil {
                 .readAtNativeFrameRate()
                 .setInput(videoUrl)
                 .addExtraArgs("-rtsp_transport", "tcp");
-        builder.addOutput(jobName + "_%06d.jpg")
+        builder.addOutput(jobName + "/" + jobName + "_%06d.jpg")
                .setVideoFrameRate(1, interval)
                .setFormat("image2");
         // rtmp url: "rtmp://localhost:1935/stream/" + jobName
@@ -61,8 +61,9 @@ public class FFMpegVideoUtil {
 
         FFmpegBuilder builder = new FFmpegBuilder()
                 .readAtNativeFrameRate()
+                .addExtraArgs("-stream_loop", "-1")
                 .setInput(videoFile);
-        builder.addOutput(jobName + "_%06d.jpg")
+        builder.addOutput(jobName + "/" + jobName + "_%06d.jpg")
                .setVideoFrameRate(1, interval)
                .setFormat("image2");
         if (StringUtils.isNoneBlank(rtmpUrl) && rtmpUrl.startsWith("rtmp://")) {

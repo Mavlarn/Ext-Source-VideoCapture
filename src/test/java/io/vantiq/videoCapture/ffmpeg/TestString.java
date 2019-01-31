@@ -1,13 +1,17 @@
 package io.vantiq.videoCapture.ffmpeg;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 public class TestString {
 
@@ -35,5 +39,16 @@ public class TestString {
 
         LOG.debug("Mili second time:{}", now.toEpochMilli());
         LOG.debug("Local date time:{}", time.toString());
+    }
+
+    @Test
+    public void testJsonString() throws IOException {
+        ObjectMapper om = new ObjectMapper();
+        String result = "{\"message\": \"ok\", \"data\": {\"uuid\": \"1943fdfa18bb11e9b4040242ac110002\"}, \"code\": 200}";
+        Map resultObj = om.readValue(result, Map.class);
+        Map data = (Map)resultObj.get("data");
+        String uuid = (String) data.get("uuid");
+
+        Assert.assertEquals(uuid, "1943fdfa18bb11e9b4040242ac110002");
     }
 }

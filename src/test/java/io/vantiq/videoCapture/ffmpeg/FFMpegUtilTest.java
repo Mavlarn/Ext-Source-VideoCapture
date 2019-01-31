@@ -28,7 +28,7 @@ public class FFMpegUtilTest {
         String videoFile = "rtsp://222.128.113.190/media/video1";
         String rtmpUrl = "rtmp://localhost:1935/stream/video";
         FFMpegVideoUtil util = new FFMpegVideoUtil();
-        VideoProgressListener listener = new VideoProgressListener(null,null, null, "video", null,false);
+        VideoProgressListener listener = new VideoProgressListener(null, null, "video", null,false);
         FFmpegJob job = util.processVideoRTSP(videoFile, 5, "video", rtmpUrl, listener);
         Thread thread = new Thread((job));
         thread.start();
@@ -40,7 +40,7 @@ public class FFMpegUtilTest {
         String videoFile = "/Users/mavlarn/mywork/vantiq/docs/aws_kinses.mp4";
         String rtmpUrl = "rtmp://localhost:1935/stream/video";
         FFMpegVideoUtil util = new FFMpegVideoUtil();
-        VideoProgressListener listener = new VideoProgressListener(null, null, null, "video", null,false);
+        VideoProgressListener listener = new VideoProgressListener(null, null, "video", null,false);
         FFmpegJob job = util.processVideoFile(videoFile, 5, "video", rtmpUrl, listener);
         Thread thread = new Thread((job));
         thread.start();

@@ -11,6 +11,7 @@ import net.bramp.ffmpeg.job.FFmpegJob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class PublishHandler extends Handler<ExtensionServiceMessage> {
 
     private VideoCaptureExtSrcSource extension;
     private FFMpegVideoUtil ffmpegUtil = new FFMpegVideoUtil();
-    private Map<String, Thread> jobs = new HashMap<>();
+    private Map<String, FFmpegJob> jobs = new HashMap<>();
 
     public PublishHandler(VideoCaptureExtSrcSource extension) throws IOException, ExtractException {
         this.extension = extension;
@@ -88,7 +89,7 @@ public class PublishHandler extends Handler<ExtensionServiceMessage> {
 
         try {
             FFmpegJob job;
-            VideoProgressListener listener = new VideoProgressListener(this, extension.getVantiqUtil(), client.getSourceName(), jobName, sendImgUrl, isUpload);
+            VideoProgressListener listener = new VideoProgressListener(this, client.getSourceName(), jobName, sendImgUrl, isUpload);
             if (videoFile != null) {
                 job = ffmpegUtil.processVideoFile(videoFile, interval, jobName, rtmpUrl, listener);
             } else if (videoUrl != null) {
@@ -98,18 +99,19 @@ public class PublishHandler extends Handler<ExtensionServiceMessage> {
                         "Request must contain videoFile or videoUrl", null);
                 return;
             }
-            Thread thread = new Thread(job);
-            this.jobs.put(jobName, thread);
-            thread.start();
+//            Thread thread = new Thread(job);
+            this.jobs.put(jobName, job);
             LOG.info("Job:{} started.", jobName);
+            job.run();
+//            thread.start();
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("ffmpeg error:" + e.getMessage(), e);
-            if (this.jobs.containsKey(jobName)) {
-                this.jobs.remove(jobName);
-            }
             client.sendQueryError(replyAddress, "io.vantiq.videoCapture.handler.PublishHandler",
                     "Process err:" + e.toString(), null);
+        } finally {
+            this.jobs.remove(jobName);
+            LOG.info("Job:{} stopped.", jobName);
         }
     }
 
@@ -118,23 +120,31 @@ public class PublishHandler extends Handler<ExtensionServiceMessage> {
         LOG.info("Job:{} finished.", jobName);
     }
 
-    // FFMpeg的Job无法停止，所以目前没有停止的功能
-    private void stopJob(Map<String, String> request, String replyAddress) {
-        String jobName = request.get(EXT_JOB_NAME);
-        LOG.info("To stop the Job:{}.", jobName);
-        ExtensionWebSocketClient client = extension.getVantiqClient();
-        if (!this.jobs.containsKey(jobName)) {
-            client.sendQueryError(replyAddress, "io.vantiq.videoCapture.handler.PublishHandler",
-                    "Job is NOT running.", null);
-            return;
-        }
-
-        try {
-            Thread job = this.jobs.get(jobName);
-            job.interrupt();
-        } catch (Exception e) {
-            client.sendQueryError(replyAddress, "io.vantiq.videoCapture.handler.PublishHandler",
-                    "Process err:" + e.toString(), null);
-        }
+    public void sendNotification(Object data) {
+        this.extension.getVantiqClient().sendNotification(data);
     }
+
+    public void uploadImage(File imgFile, String uploadFullName) {
+        this.extension.getVantiqUtil().uploadImage(imgFile, uploadFullName);
+    }
+
+    // FFMpeg的Job无法停止，所以目前没有停止的功能
+//    private void stopJob(Map<String, String> request, String replyAddress) {
+//        String jobName = request.get(EXT_JOB_NAME);
+//        LOG.info("To stop the Job:{}.", jobName);
+//        ExtensionWebSocketClient client = extension.getVantiqClient();
+//        if (!this.jobs.containsKey(jobName)) {
+//            client.sendQueryError(replyAddress, "io.vantiq.videoCapture.handler.PublishHandler",
+//                    "Job is NOT running.", null);
+//            return;
+//        }
+//
+//        try {
+//            Thread job = this.jobs.get(jobName);
+//            job.interrupt();
+//        } catch (Exception e) {
+//            client.sendQueryError(replyAddress, "io.vantiq.videoCapture.handler.PublishHandler",
+//                    "Process err:" + e.toString(), null);
+//        }
+//    }
 }
